@@ -1,0 +1,259 @@
+CATATAN PEMBUATAN DASHBOARD ANALISIS KEMISKINAN
+================================================
+
+Dokumen ini mencatat tujuan proyek, alur pembuatan, metode pembersihan dan
+analisis, isi diagram, cara membaca visualisasi, serta cara menjalankan
+dashboard. Catatan ini ditujukan untuk membantu presentasi dan pemeliharaan
+proyek.
+
+
+1. TUJUAN DAN HASIL PROYEK
+--------------------------
+
+Proyek merangkum data kemiskinan kabupaten/kota dan beberapa indikator
+sosial-ekonomi dalam bentuk notebook analisis dan dashboard interaktif.
+Dashboard dibuat sebagai satu papan visual komposit yang ringkas agar dapat
+dipahami dalam satu pandangan dan diekspor sebagai gambar untuk portofolio.
+
+File penting:
+- build_project.py: generator untuk data bersih, notebook, dashboard, dan README.
+- data/raw/Dataset_Kemiskinan.csv: salinan data sumber.
+- data/clean/data_bersih.csv: data setelah validasi dan pembersihan.
+- notebook/analisis_kemiskinan.ipynb: notebook analisis.
+- dashboard/dashboard_kemiskinan.html: dashboard HTML interaktif.
+- dashboard/app.py: dashboard Streamlit dengan filter provinsi.
+- README.md: ringkasan hasil dan petunjuk proyek.
+
+Dashboard memakai tema retro: latar kertas krem, hijau zaitun, terracotta,
+mustard, judul serif, label monospace, dan panel dengan bingkai tegas.
+
+
+2. ALUR PEMBUATAN
+-----------------
+
+Generator utama adalah build_project.py. Jalankan dari folder proyek dengan:
+
+    python .\build_project.py
+
+Urutan prosesnya:
+1. Membaca Dataset_Kemiskinan (1).csv. Pemisah kolom adalah titik koma dan
+   pemisah desimal adalah koma.
+2. Menyalin sumber ke data/raw/Dataset_Kemiskinan.csv.
+3. Memeriksa dan menghapus duplikat persis.
+4. Memeriksa nilai indikator terhadap rentang validasi di bagian 3.
+5. Mengubah nilai di luar rentang menjadi kosong, lalu mengisinya dengan median
+   provinsi. Jika median provinsi tidak tersedia, digunakan median seluruh data.
+6. Menghapus kolom Klasifikasi Kemiskinan lama karena tidak konsisten dengan
+   nilai indikator kemiskinan.
+7. Menyimpan data bersih dan menghasilkan notebook, dashboard HTML, aplikasi
+   Streamlit, konfigurasi tema, dan README.
+
+Hasil pemeriksaan data saat catatan ini dibuat:
+- Data sumber: 532 baris dan 13 kolom.
+- Duplikat persis yang dihapus: 16 baris.
+- Data setelah deduplikasi: 516 wilayah.
+- Baris dengan sedikitnya satu nilai di luar batas: 61 baris atau sekitar
+  11,8% dari data setelah deduplikasi.
+
+Angka 61 adalah jumlah baris unik yang terdampak; jumlah anomali per kolom
+tidak boleh dijumlahkan untuk memperkirakan jumlah baris karena satu baris
+dapat memiliki anomali di lebih dari satu kolom.
+
+
+3. PEMBERSIHAN DAN METODE ANALISIS
+----------------------------------
+
+Rentang validasi yang digunakan generator:
+
+    Indikator       Rentang yang diterima
+    Kemiskinan      0 sampai 60
+    RLS             3 sampai 13
+    Pengeluaran     4.000 sampai 30.000
+    IPM             45 sampai 90
+    UHH             55 sampai 80
+    Sanitasi        5 sampai 100
+    AirMinum        5 sampai 100
+    TPT             0 sampai 15
+    TPAK            50 sampai 100
+    PDRB            lebih besar dari 1
+
+Rentang tersebut adalah aturan validasi proyek, bukan pengganti pemeriksaan
+metadata resmi atau sumber data. Nilai yang diimputasi bukan nilai observasi
+asli. Untuk penggunaan penting, periksa kembali nilai dan satuan ke sumber
+aslinya.
+
+Korelasi:
+- Korelasi dihitung dengan Spearman untuk mengukur hubungan monoton dan agar
+  analisis lebih sesuai saat data memiliki sebaran tidak normal atau pencilan.
+- Nilai korelasi berada pada rentang -1 sampai +1.
+- Korelasi menjelaskan asosiasi, bukan sebab-akibat.
+
+Model eksploratif di notebook:
+- Label "Tinggi" bernilai 1 untuk wilayah pada kuartil kemiskinan tertinggi,
+  dan 0 untuk wilayah lainnya.
+- Kemiskinan tidak dimasukkan sebagai fitur model agar label tidak bocor ke
+  prediktor.
+- Data dibagi 80% latih dan 20% uji secara stratified dengan random_state 42.
+- Model yang digunakan adalah Random Forest dengan 300 pohon dan
+  class_weight="balanced".
+- Hasil pada data ini: akurasi 0,846 dan F1 kelas "Tinggi" 0,692.
+- Model hanya untuk eksplorasi pola; bukan alat prediksi kebijakan.
+
+Beberapa asosiasi pada data bersih:
+- Pengeluaran dengan Kemiskinan: Spearman sekitar -0,49.
+- IPM dengan Kemiskinan: Spearman sekitar -0,47.
+
+Nilai tersebut tidak membuktikan bahwa perubahan satu indikator menyebabkan
+perubahan kemiskinan.
+
+
+4. TUJUH DIAGRAM DALAM PAPAN KOMPOSIT
+------------------------------------
+
+Papan komposit menggabungkan tujuh panel dalam satu grafik Plotly:
+
+4.1 Peringkat enam wilayah tertinggi - diagram batang horizontal
+
+Menampilkan enam kabupaten/kota dengan angka Kemiskinan tertinggi pada
+cakupan data yang sedang dianalisis. Panjang batang menunjukkan persentase.
+Warna bergerak dari mustard ke terracotta seiring nilai meningkat. Arahkan
+kursor untuk melihat nama kabupaten/kota, provinsi, dan nilai.
+
+Cara membaca:
+- Batang lebih panjang berarti persentase yang tercatat lebih tinggi.
+- Grafik ini hanya menunjukkan enam nilai teratas, bukan seluruh sebaran.
+- Nilai yang sangat tinggi perlu dibaca bersama catatan validasi dan imputasi.
+
+4.2 Sebaran angka kemiskinan - histogram
+
+Sumbu horizontal menunjukkan rentang persentase Kemiskinan; sumbu vertikal
+menunjukkan jumlah kabupaten/kota dalam rentang tersebut.
+
+Cara membaca:
+- Batang tinggi menunjukkan banyak wilayah berada pada kisaran itu.
+- Histogram menggambarkan sebaran, bukan urutan wilayah atau perubahan waktu.
+
+4.3 Posisi terhadap median - diagram donut
+
+Membagi wilayah menjadi dua kelompok deskriptif: Kemiskinan kurang dari atau
+sama dengan median, dan Kemiskinan di atas median. Pada seluruh data, median
+yang digunakan sekitar 7,53%; median berubah saat cakupan provinsi difilter.
+
+Cara membaca:
+- Hijau menunjukkan wilayah <= median.
+- Terracotta menunjukkan wilayah > median.
+- Pembagian ini bukan garis kemiskinan atau klasifikasi resmi.
+- Arahkan kursor untuk melihat jumlah wilayah dan persentase kelompok.
+
+4.4 Distribusi kumulatif - kurva area
+
+Nilai Kemiskinan diurutkan dari yang terkecil ke terbesar. Sumbu horizontal
+menunjukkan nilai Kemiskinan; sumbu vertikal menunjukkan persentase wilayah
+kumulatif yang nilainya berada sampai titik tersebut.
+
+Contoh: titik pada sumbu vertikal 80% berarti sekitar 80% wilayah memiliki
+nilai Kemiskinan sama dengan atau lebih rendah dari nilai pada sumbu
+horizontal tersebut.
+
+Catatan: kurva ini bukan tren waktu dan tidak menunjukkan perkembangan dari
+tahun ke tahun.
+
+4.5 Pengeluaran dan Kemiskinan - diagram pencar
+
+Setiap titik mewakili satu kabupaten/kota. Sumbu horizontal adalah
+Pengeluaran dan sumbu vertikal adalah Kemiskinan.
+
+Cara membaca:
+- Pola titik yang cenderung menurun menunjukkan asosiasi negatif pada data.
+- Titik yang jauh dari kelompok utama dapat menjadi pencilan atau wilayah
+  dengan karakteristik berbeda; periksa detail dengan hover.
+- Diagram ini tidak membuktikan sebab-akibat.
+
+4.6 Rentang kemiskinan - box plot lima provinsi
+
+Menampilkan sebaran nilai Kemiskinan kabupaten/kota pada lima provinsi dengan
+median Kemiskinan tertinggi.
+
+Cara membaca:
+- Garis di dalam kotak adalah median.
+- Kotak menunjukkan rentang kuartil bawah hingga kuartil atas.
+- Whisker dan titik pencilan menunjukkan rentang nilai menurut aturan box
+  plot.
+- Kotak lebih lebar berarti variasi antarkabupaten/kota dalam provinsi itu
+  lebih besar.
+- Panel ini menunjukkan distribusi wilayah, bukan hanya rata-rata provinsi.
+
+4.7 Korelasi Spearman - heatmap
+
+Heatmap menunjukkan korelasi antarindikator. Warna merah menandakan nilai
+negatif, krem mendekati nol, dan hijau menandakan nilai positif. Angka
+ditampilkan di setiap sel; arahkan kursor untuk membaca nilai lebih rinci.
+
+Cara membaca:
+- +1: hubungan monoton searah yang sangat kuat.
+-  0: hubungan monoton yang lemah atau tidak tampak.
+- -1: hubungan monoton berlawanan yang sangat kuat.
+- Diagonal bernilai 1 karena setiap indikator dibandingkan dengan dirinya
+  sendiri.
+
+Heatmap membantu menemukan pola hubungan, tetapi tidak menunjukkan sebab
+maupun arah pengaruh.
+
+
+5. CARA MENGGUNAKAN DASHBOARD
+-----------------------------
+
+Dashboard HTML:
+- Buka dashboard/dashboard_kemiskinan.html dengan browser.
+- Semua data ditampilkan sebagai satu cakupan; file HTML tidak menyediakan
+  filter provinsi.
+- Arahkan kursor ke diagram untuk melihat tooltip.
+- Gunakan ikon kamera pada toolbar Plotly untuk mengunduh gambar PNG.
+
+Streamlit:
+- Buka tab "Ringkasan" untuk papan komposit.
+- Gunakan "Saring berdasarkan provinsi" untuk memilih satu atau beberapa
+  provinsi. Kosongkan pilihan untuk kembali ke seluruh wilayah.
+- Metrik, intisari, dan panel ringkasan menyesuaikan pilihan.
+- Tab "Korelasi & hubungan" menampilkan heatmap, asosiasi terhadap Kemiskinan,
+  dan diagram pencar.
+- Tab "Data wilayah" menampilkan tabel data sesuai filter.
+- Ikon kamera pada grafik mengunduh PNG komposit. Ukuran dasar ekspor adalah
+  1800 x 1500 dengan skala 2.
+
+Menjalankan Streamlit dari PowerShell:
+
+    cd .\dashboard
+    python -m pip install -r requirements.txt
+    streamlit run app.py
+
+Membangun ulang hasil dari folder proyek:
+
+    python .\build_project.py
+
+Dashboard HTML dapat dibuka langsung dari file atau disajikan dengan server
+lokal dari folder dashboard:
+
+    cd .\dashboard
+    python -m http.server 8766
+
+Setelah itu buka http://127.0.0.1:8766/dashboard_kemiskinan.html.
+
+
+6. BATASAN DAN INTERPRETASI
+---------------------------
+
+- Dataset memiliki nilai yang melanggar rentang validasi. Nilai tersebut
+  diganti dengan median; hasil dapat berbeda dari data asli.
+- Batas validasi bersifat aturan pembersihan proyek dan perlu dicocokkan
+  dengan definisi serta satuan sumber.
+- Rata-rata, median, korelasi, dan diagram berubah sesuai cakupan filter.
+- Wilayah dengan data yang diimputasi perlu ditafsirkan secara hati-hati.
+- Korelasi bukan sebab-akibat.
+- Model klasifikasi bersifat eksploratif dan tidak divalidasi sebagai alat
+  keputusan atau kebijakan.
+- Verifikasi data terhadap sumber resmi sebelum digunakan untuk kesimpulan
+  atau keputusan.
+
+================================================
+Catatan dibuat untuk dokumentasi proyek analisis kemiskinan kabupaten/kota.
