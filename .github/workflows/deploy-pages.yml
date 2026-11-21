@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "dashboard/dashboard_kemiskinan.html"
+      - "README.md"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 

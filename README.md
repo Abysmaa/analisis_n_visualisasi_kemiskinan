@@ -12,8 +12,11 @@ Analisis ini menjawab: faktor apa yang paling berkaitan dengan kemiskinan, wilay
 ## Dashboard
 
 - [Dashboard HTML interaktif](dashboard/dashboard_kemiskinan.html)
+- [Dashboard web GitHub Pages](https://abysmaa.github.io/analisis_n_visualisasi_kemiskinan/)
 - [Notebook](notebook/analisis_kemiskinan.ipynb)
 - [Aplikasi Streamlit](dashboard/app.py)
+
+GitHub Pages menerbitkan dashboard HTML sebagai halaman utama dari branch `main`. Pembaruan pada dashboard HTML atau README akan memicu deployment otomatis melalui `.github/workflows/deploy-pages.yml`. Versi Pages bersifat statis dan tidak memiliki filter provinsi; gunakan aplikasi Streamlit untuk analisis dengan filter.
 
 Dashboard memakai palet retro kertas-krem, hijau zaitun, terracotta, dan mustard; judul serif, label monospace, bingkai tebal, dan kartu bersiluet asimetris. Ringkasan visualisasinya disusun sebagai satu papan komposit responsif—bukan grafik-grafik besar yang berdiri sendiri—dengan tujuh panel: peringkat enam wilayah tertinggi, histogram sebaran, donut posisi terhadap median, kurva distribusi kumulatif, scatter pengeluaran–kemiskinan, box plot lima provinsi dengan median tertinggi, serta heatmap korelasi Spearman. Arahkan kursor untuk melihat nilai rinci; pada HTML dan Streamlit, tombol kamera grafik dapat mengunduh satu PNG komposit dengan ukuran dasar 1800 × 1500 dan skala ekspor 2 untuk sampul portofolio. Kurva kumulatif mengurutkan wilayah dan bukan tren waktu; donut adalah pembagian deskriptif, bukan klasifikasi resmi. Versi Streamlit memiliki filter provinsi yang memperbarui semua panel, serta tab terpisah untuk korelasi dan tabel data. Tema terang dikunci di `dashboard/.streamlit/config.toml` agar warna tabel dan kontrol tetap konsisten.
 
